@@ -144,18 +144,18 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#fff',
   },
   heading: {
     fontSize: 24,
     marginBottom: 20,
-    color: '#fff',
+    color: 'black',
     fontWeight: 'bold',
     textAlign: 'center',
   },
   input: {
     marginBottom: 20,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#c2c2c2',
   },
   radioGroup: {
     flexDirection: 'row',

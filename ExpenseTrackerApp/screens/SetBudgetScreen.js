@@ -6,11 +6,19 @@ const SetBudgetScreen = () => {
   const [budget, setBudget] = useState('');
 
   useEffect(() => {
-    const loadBudget = async () => {
-      const stored = await AsyncStorage.getItem('budget');
-      if (stored) setBudget(stored);
+    const loadTransactions = async () => {
+      const stored = await AsyncStorage.getItem('transactions');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log(parsed); // Check if data is fetched properly
+        setTransactions(parsed);
+        setFilteredTransactions(parsed);
+        calculateTotals(parsed);
+      } else {
+        console.log('No transactions found'); // If no data is available
+      }
     };
-    loadBudget();
+    loadTransactions();
   }, []);
 
   const saveBudget = async () => {

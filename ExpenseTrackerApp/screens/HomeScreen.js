@@ -10,11 +10,7 @@ const HomeScreen = ({ navigation }) => {
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [menuVisible, setMenuVisible] = useState(false);
-  const [totals, setTotals] = useState({ 
-    income: 0, 
-    expense: 0, 
-    balance: 0 
-  });
+  const [totals, setTotals] = useState({ income: 0, expense: 0, balance: 0 });
   const theme = useTheme();
 
   useEffect(() => {
@@ -27,8 +23,10 @@ const HomeScreen = ({ navigation }) => {
   const loadTransactions = async () => {
     try {
       const stored = await AsyncStorage.getItem('transactions');
+      console.log('Loaded transactions from AsyncStorage:', stored); // Debugging: Check what data is loaded
       if (stored) {
         const parsed = JSON.parse(stored);
+        console.log('Parsed transactions:', parsed); // Debugging: Check parsed transactions
         setTransactions(parsed);
         setFilteredTransactions(parsed);
         calculateTotals(parsed);
@@ -58,26 +56,30 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
+  useEffect(() => {
+    console.log('Transactions:', transactions);  // Debugging: Check if transactions are being loaded
+    filterTransactions();
+  }, [filterType, sortBy, transactions]);
+  
   const filterTransactions = () => {
     let filtered = [...transactions];
+
     if (filterType !== 'all') {
       filtered = filtered.filter(t => t.type === filterType);
     }
+
     if (sortBy === 'date') {
       filtered = filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     } else if (sortBy === 'amount') {
       filtered = filtered.sort((a, b) => b.amount - a.amount);
     }
+
     setFilteredTransactions(filtered);
     calculateTotals(filtered);
   };
 
-  useEffect(() => {
-    filterTransactions();
-  }, [filterType, sortBy, transactions]);
-
   const groupByMonth = () => {
-    return filteredTransactions.reduce((groups, transaction) => {
+    const grouped = filteredTransactions.reduce((groups, transaction) => {
       const month = new Date(transaction.date).toLocaleString('th-TH', { 
         month: 'long', 
         year: 'numeric' 
@@ -88,6 +90,9 @@ const HomeScreen = ({ navigation }) => {
       groups[month].push(transaction);
       return groups;
     }, {});
+    
+    console.log('Grouped by Month:', grouped);  // Debugging: Check grouped transactions by month
+    return grouped;
   };
 
   const renderRightActions = (item) => {
@@ -115,7 +120,7 @@ const HomeScreen = ({ navigation }) => {
       month: 'short',
       day: 'numeric',
     });
-  
+
     return (
       <Swipeable renderRightActions={() => renderRightActions(item)}>
         <View style={styles.listItem}>
@@ -127,7 +132,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.textContainer}>
             <Text style={styles.categoryText}>{item.category}</Text>
             <Text style={styles.dateText}>{formattedDate}</Text>
-            {item.note && <Text style={styles.noteText}>{item.note}</Text>}  {/* Display the note */}
+            {item.note && <Text style={styles.noteText}>{item.note}</Text>}
           </View>
           <Text style={[styles.amountText, { color: amountColor }]}>
             {formattedAmount}
@@ -151,26 +156,11 @@ const HomeScreen = ({ navigation }) => {
           text: 'ลบ',
           onPress: async () => {
             try {
-              console.log('Deleting transaction:', transaction);  // Debugging
-              const updatedTransactions = transactions.filter(
-                t => t.date !== transaction.date
-              );
-    
-              // Save the updated transactions back to AsyncStorage
+              const updatedTransactions = transactions.filter(t => t.date !== transaction.date);
               await AsyncStorage.setItem('transactions', JSON.stringify(updatedTransactions));
-    
-              // Update the state to reflect the changes in the UI
               setTransactions(updatedTransactions);
               setFilteredTransactions(updatedTransactions);
-    
-              // Recalculate totals after deletion
               calculateTotals(updatedTransactions);
-    
-              // Display the updated AsyncStorage data in an alert
-              const storedTransactions = await AsyncStorage.getItem('transactions');
-              Alert.alert('AsyncStorage after delete', JSON.stringify(JSON.parse(storedTransactions), null, 2));
-    
-              console.log('Transaction deleted successfully');
             } catch (error) {
               console.error('Error deleting transaction:', error);
               alert('เกิดข้อผิดพลาดในการลบรายการ');
@@ -180,11 +170,9 @@ const HomeScreen = ({ navigation }) => {
       ]
     );
   };
-  
-  
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+   return (
+    <View style={[styles.container, { backgroundColor: 'white' }]}>
       <Appbar.Header>
         <Appbar.Content title="รายการธุรกรรม" />
         <Appbar.Action 
@@ -197,84 +185,25 @@ const HomeScreen = ({ navigation }) => {
         />
       </Appbar.Header>
 
-      <Menu
-        visible={menuVisible}
-        onDismiss={() => setMenuVisible(false)}
-        anchor={{ x: 0, y: 0 }}
-      >
-        <Menu.Item 
-          onPress={() => { setFilterType('all'); setMenuVisible(false); }} 
-          title="ทั้งหมด" 
+      {filteredTransactions.length === 0 ? (
+        <Text style={{ color: 'white', textAlign: 'center' }}>ไม่มีรายการที่ตรงกับตัวกรอง</Text>
+      ) : (
+        <FlatList
+          data={Object.entries(groupByMonth())}
+          keyExtractor={([month]) => month}
+          renderItem={({ item: [month, transactions] }) => (
+            <View>
+              <Text style={styles.monthHeader}>{month}</Text>
+              {transactions.map((transaction, index) => (
+                <View key={`${transaction.date}-${index}`}>
+                  {renderTransactionItem(transaction)}
+                </View>
+              ))}
+            </View>
+          )}
+          contentContainerStyle={styles.listContent}
         />
-        <Menu.Item 
-          onPress={() => { setFilterType('income'); setMenuVisible(false); }} 
-          title="รายรับ" 
-        />
-        <Menu.Item 
-          onPress={() => { setFilterType('expense'); setMenuVisible(false); }} 
-          title="รายจ่าย" 
-        />
-        <Divider />
-        <Menu.Item 
-          onPress={() => { setSortBy('date'); setMenuVisible(false); }} 
-          title="เรียงตามวันที่" 
-        />
-        <Menu.Item 
-          onPress={() => { setSortBy('amount'); setMenuVisible(false); }} 
-          title="เรียงตามจำนวนเงิน" 
-        />
-      </Menu>
-
-      <Card style={styles.summaryCard}>
-        <Card.Content>
-          <View style={styles.summaryRow}>
-            <Text>รายรับ:</Text>
-            <Text style={styles.incomeText}>
-              ฿{totals.income.toLocaleString('th-TH', { 
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2 
-              })}
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text>รายจ่าย:</Text>
-            <Text style={styles.expenseText}>
-              ฿{totals.expense.toLocaleString('th-TH', { 
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2 
-              })}
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text>ยอดคงเหลือ:</Text>
-            <Text style={[
-              styles.balanceText,
-              { color: totals.balance >= 0 ? '#4CAF50' : '#F44336' }
-            ]}>
-              ฿{totals.balance.toLocaleString('th-TH', { 
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2 
-              })}
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
-
-      <FlatList
-        data={Object.entries(groupByMonth())}
-        keyExtractor={([month]) => month}
-        renderItem={({ item: [month, transactions] }) => (
-          <View>
-            <Text style={styles.monthHeader}>{month}</Text>
-            {transactions.map((transaction, index) => (
-              <View key={`${transaction.date}-${index}`}>
-                {renderTransactionItem(transaction)}
-              </View>
-            ))}
-          </View>
-        )}
-        contentContainerStyle={styles.listContent}
-      />
+      )}
 
       <FAB
         style={styles.fab}
@@ -286,17 +215,19 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+
   },
   summaryCard: {
     margin: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'yellow',
   },
   noteText: {
     fontSize: 14,
-    color: '#bbb',
+    color: 'black',
     marginTop: 4,
     fontStyle: 'italic',
   },  
@@ -306,11 +237,11 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   incomeText: {
-    color: '#4CAF50',
+    color: 'green',
     fontWeight: 'bold',
   },
   expenseText: {
-    color: '#F44336',
+    color: 'red',
     fontWeight: 'bold',
   },
   balanceText: {
@@ -320,11 +251,11 @@ const styles = StyleSheet.create({
   monthHeader: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: 'Black',
     marginTop: 8,
     marginBottom: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'white',
     paddingVertical: 8,
   },
   listContent: {
@@ -344,12 +275,12 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 16,
-    color: '#fff',
+    color: '#black',
     fontWeight: '500',
   },
   dateText: {
     fontSize: 12,
-    color: '#aaa',
+    color: '#gray',
     marginTop: 4,
   },
   amountText: {
@@ -363,7 +294,7 @@ const styles = StyleSheet.create({
     width: 160,
   },
   actionText: {
-    color: '#fff',
+    color: 'black',
     padding: 20,
     backgroundColor: '#333',
   },
