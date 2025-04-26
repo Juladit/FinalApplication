@@ -41,10 +41,15 @@ const PieChartScreen = ({ navigation }) => {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <Card style={{ margin: 16 }}>
         <Card.Content>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>
+        <Text style={{ 
+          fontSize: 18, 
+          fontWeight: 'bold', 
+          marginBottom: 16,
+          color: theme.colors.primary // or any other color
+          }}>
             Expense Breakdown
           </Text>
           {data.length > 0 ? (
@@ -53,10 +58,11 @@ const PieChartScreen = ({ navigation }) => {
               width={screenWidth - 32}
               height={220}
               chartConfig={{
-                backgroundColor: theme.colors.background,
-                backgroundGradientFrom: theme.colors.background,
-                backgroundGradientTo: theme.colors.background,
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, // Change chart color dynamically
+                backgroundColor: '#555',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                color: (opacity = 1) => theme.colors.text,  // Replace with any color code you like
+                labelColor: (opacity = 1) => theme.colors.text,  // Replace with any color code you like
               }}
               accessor="amount"
               backgroundColor="transparent"
@@ -70,6 +76,8 @@ const PieChartScreen = ({ navigation }) => {
       </Card>
     </View>
   );
+  
 };
+
 
 export default PieChartScreen;

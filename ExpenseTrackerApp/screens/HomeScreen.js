@@ -179,10 +179,7 @@ const HomeScreen = ({ navigation }) => {
           icon="chart-pie" 
           onPress={() => navigation.navigate('PieChart')} 
         />
-        <Appbar.Action 
-          icon="filter" 
-          onPress={() => setMenuVisible(true)} 
-        />
+        
       </Appbar.Header>
 
       {filteredTransactions.length === 0 ? (

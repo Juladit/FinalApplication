@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Button, TextInput, Text, RadioButton, Menu, Divider } from 'react-native-paper';
+import { Button, TextInput, Text, RadioButton, Menu, Divider, useTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const incomeCategories = ['เงินเดือน', 'ลงทุน', 'ของขวัญ', 'อื่นๆ'];
@@ -23,6 +23,15 @@ const AddTransaction = ({ navigation, route }) => {
       setNote(note || '');
     }
   }, [route.params?.transaction]);
+  
+  const theme = {
+    colors: {
+      primary: '#4CAF50', // for active color (green)
+      text: '#000000',     // force black text
+      placeholder: '#000000', // dark gray placeholder
+      background: '#ffffff',
+    }
+  };
 
   const saveTransaction = async () => {
     if (!amount || !category) {
@@ -73,59 +82,69 @@ const AddTransaction = ({ navigation, route }) => {
       <Text style={styles.heading}>{route.params?.transaction ? 'แก้ไขรายการ' : 'เพิ่มรายการใหม่'}</Text>
 
       <TextInput
-        label="จำนวนเงิน (฿)"
-        value={amount}
-        onChangeText={setAmount}
-        keyboardType="numeric"
-        style={styles.input}
-        left={<TextInput.Affix text="฿" />}
-      />
+  label="จำนวนเงิน (฿)"
+  value={amount}
+  onChangeText={setAmount}
+  keyboardType="numeric"
+  style={styles.input}
+  left={<TextInput.Affix text="฿" />}
+  theme={theme}
+/>
 
-      <TextInput
-        label="หมายเหตุ (ไม่จำเป็น)"
-        value={note}
-        onChangeText={setNote}
-        style={styles.input}
-      />
+<TextInput
+  label="หมายเหตุ (ไม่จำเป็น)"
+  value={note}
+  onChangeText={setNote}
+  style={styles.input}
+  theme={theme}
+/>
 
-      <View style={styles.radioGroup}>
-        <Text>ประเภท:</Text>
-        <RadioButton.Group onValueChange={value => setType(value)} value={type}>
-          <View style={styles.radioOption}>
-            <RadioButton value="income" />
-            <Text>รายรับ</Text>
-          </View>
-          <View style={styles.radioOption}>
-            <RadioButton value="expense" />
-            <Text>รายจ่าย</Text>
-          </View>
-        </RadioButton.Group>
-      </View>
+<View style={styles.radioGroup}>
+  <Text style={{ color: '#000' }}>ประเภท:</Text>
+  <RadioButton.Group onValueChange={value => setType(value)} value={type}>
+    <View style={styles.radioOption}>
+      <RadioButton value="income" color="#4CAF50" />
+      <Text style={{ color: '#000' }}>รายรับ</Text>
+    </View>
+    <View style={styles.radioOption}>
+      <RadioButton value="expense" color="#4CAF50" />
+      <Text style={{ color: '#000' }}>รายจ่าย</Text>
+    </View>
+  </RadioButton.Group>
+</View>
 
-      <Menu
-        visible={menuVisible}
-        onDismiss={() => setMenuVisible(false)}
-        anchor={
-          <Button 
-            mode="outlined" 
-            onPress={() => setMenuVisible(true)} 
-            style={styles.menuButton}
-          >
-            {category || 'เลือกหมวดหมู่'}
-          </Button>
-        }
+      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+  <Menu
+    visible={menuVisible}
+    onDismiss={() => setMenuVisible(false)} 
+    anchor={
+      <Button 
+        mode="outlined" 
+        onPress={() => setMenuVisible(true)} 
+        style={styles.menuButton}
+        color="#4CAF50" 
+        labelStyle={{ color: '#000' }} 
+        icon="menu-down" 
+        iconColor="#4CAF50" 
+        iconStyle={{ color: '#000' }} 
       >
-        {currentCategories.map((cat, i) => (
-          <Menu.Item
-            key={i}
-            onPress={() => {
-              setCategory(cat);
-              setMenuVisible(false);
-            }}
-            title={cat}
-          />
-        ))}
-      </Menu>
+        {category || 'เลือกหมวดหมู่'}
+      </Button>
+    }
+  >
+    {currentCategories.map((cat, i) => (
+      <Menu.Item
+        key={i}
+        onPress={() => {
+          setCategory(cat);
+          setMenuVisible(false);
+        }}
+        title={cat}
+      />
+    ))}
+  </Menu>
+</View>
+
 
       <Divider style={{ marginVertical: 10 }} />
 
@@ -149,13 +168,14 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     marginBottom: 20,
-    color: 'black',
+    color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
   },
   input: {
     marginBottom: 20,
-    backgroundColor: '#c2c2c2',
+    backgroundColor: '#555',
+    color: '#000',
   },
   radioGroup: {
     flexDirection: 'row',
